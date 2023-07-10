@@ -5,14 +5,7 @@
 $(document).on("click","#btn",function(){
     let a =true;
     console.log($('input:radio[name=annualType]').length);
-    if($('input:text[name=contents]')){
-		if($('input[name=contents]').val() ==""){
-			alert("결재 상세 내용은 필수입니다.");
-			 a=false;
-			  console.log(a);
-            return false;
-		}
-	}
+   
     if($('input:radio').length){
 	
 	
@@ -72,6 +65,17 @@ $(document).on("click","#btn",function(){
     
     console.log(a);
     }
+    if(a == false){
+		return false;
+	}
+     if($('input:text[name=contents]')){
+		if($('input[name=contents]').val() ==""){
+			alert("결재 상세 내용은 필수입니다.");
+			 a=false;
+			  console.log(a);
+            return false;
+		}
+	}
 console.log(a);
 if(a){
     $("input").each(function(idx,index){

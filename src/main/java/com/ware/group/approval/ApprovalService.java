@@ -306,7 +306,9 @@ public class ApprovalService {
 					leaveRecordVO.setMemberId(approvalVO.getMemberId());
 					leaveRecordVO.setType(ApprovalStatus.APPROVAL);
 					result = approvalDAO.setLeaverCode(leaveRecordVO);
-					result = approvalDAO.setAnnual(leaveRecordVO);
+					if(leaveRecordVO.getAnnualType().equals("년차")) {
+						result = approvalDAO.setAnnual(leaveRecordVO);		
+					}
 					}			
 					
 					
