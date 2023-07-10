@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="schedule">
+
+    <select id="selectCalendar" resultType="CalendarVO" parameterType="MonthVO">
+        SELECT CALENDAR_DATE, CALENDAR_DD, CALENDAR_DAYOFWEEK
+          FROM DATE
+         WHERE CALENDAR_YEAR=#{year} AND CALENDAR_MM=#{month}
+         ORDER BY CALENDAR_DATE
+    </select> 
+
+    <select id="selectScheList4Calen" resultType="com.ware.group.schedule.ScheDetailVO" parameterType="com.ware.group.common.Field3VO">
+        SELECT NULL ID, NULL SEQ, HOL_TITLE TITLE, NULL USERNUM, NULL HOUR, NULL MINUTE, HOL_COLOR FONTCOLOR
+          FROM HOLIDAY
+        WHERE HOL_MONTH=MONTH(#{field2}) AND HOL_DATE=DAY(#{field2}) AND DELETEFLAG=0
+        UNION ALL
+        SELECT SD.ID, SEQ, TITLE, USERNUM, SD.HOUR, SD.MINUTE, NULL FONTCOLOR
+          FROM SCHEDULE_DETAIL SD 
+          LEFT OUTER JOIN SCHEDULE SS ON SS.ID=SD.ID
+          LEFT OUTER JOIN MEMBER M ON SS.USERNUM = M.id
+        WHERE DATE=#{field2} AND DELETEFLAG=0 AND (ISOPEN=1 AND M.department_id IN (SELECT department_id FROM MEMBER WHERE id=#{field1}))
+        UNION ALL
+        SELECT SD.ID, SEQ, TITLE, USERNUM, SD.HOUR, SD.MINUTE, NULL FONTCOLOR
+          FROM SCHEDULE_DETAIL SD 
+          LEFT OUTER JOIN SCHEDULE SS ON SS.ID=SD.ID
+        WHERE DATE=#{field2} AND DELETEFLAG=0 AND ISOPEN=0 AND USERNUM=#{field1}
+        ORDER BY HOUR, MINUTE, ID
+    </select>
+
+    <sql id="includeSche">
+        WHERE DELETEFLAG=0
+    </sql>
+
+    <select id="selectScheCount" resultType="Integer" parameterType="com.ware.group.common.SearchVO">
+        SELECT COUNT(*)
+          FROM SCHEDULE
+         <include refid="includeSche"/>
+    </select> 
+    
+	<select id="selectScheList" resultType="com.ware.group.schedule.ScheVO" parameterType="com.ware.group.common.SearchVO">
+	    SELECT TITLE, TYPE, START_DATE, START_HOUR, START_MINUTE, END_DATE, END_HOUR
+	    	 , END_MINUTE, REPEAT_TYPE, REPEAT_END, CONTENT, ISOPEN, M.employee_id USERNUM, M.name USERNAME
+	      FROM SCHEDULE TC
+	     INNER JOIN MEMBER M ON TC.USERNUM = M.id
+	     <include refid="includeSche"/>
+	     ORDER BY ID DESC
+	     <if test="rowStart != null">
+	         LIMIT ${rowStart-1}, 10
+	     </if>
+	</select>
+        
+	<insert id="insertSche" parameterType="com.ware.group.schedule.ScheVO" useGeneratedKeys="true" keyProperty="id">
+	    INSERT INTO SCHEDULE(TITLE, TYPE, START_DATE, START_HOUR, START_MINUTE, END_DATE, END_HOUR, 
+	    			END_MINUTE, REPEAT_TYPE, REPEAT_OPTION, REPEAT_END, CONTENT, ISOPEN, USERNUM, UPDATEDATE, INSERTDATE, DELETEFLAG)
+	    VALUES (#{title}, #{type}, #{startdate}, #{starthour}, #{startminute}, #{enddate}, #{endhour}, 
+	    		#{endminute}, #{repeattype}, #{repeatoption}, #{repeatend}, #{content}, #{isopen}, #{usernum}, NOW(), NOW(), 0)
+	</insert>
+    
+    <update id="updateSche" parameterType="com.ware.group.schedule.ScheVO">
+        UPDATE SCHEDULE
+           SET TITLE=#{title}, TYPE=#{type}, START_DATE=#{startdate}, START_HOUR=#{starthour}, START_MINUTE=#{startminute}, END_DATE=#{enddate}
+             , END_HOUR=#{endhour}, END_MINUTE=#{endminute}, REPEAT_TYPE=#{repeattype}, REPEAT_OPTION=#{repeatoption}, REPEAT_END=#{repeatend}
+             , CONTENT=#{content}, ISOPEN=#{isopen}, UPDATEDATE=NOW()
+         WHERE ID=#{id} 
+    </update>
+
+    <delete id="deleteSche" parameterType="com.ware.group.schedule.ScheVO">
+        UPDATE SCHEDULE
+           SET DELETEFLAG=1
+         WHERE ID=#{id} 
+    </delete> 
+
+    <insert id="insertScheDetail" parameterType="com.ware.group.schedule.ScheDetailVO" >
+        INSERT INTO SCHEDULE_DETAIL(ID, SEQ, DATE, HOUR, MINUTE) 
+        		VALUES(#{id}, #{seq}, #{date}, #{hour}, #{minute})
+    </insert>
+     
+    <delete id="deleteScheDetail" parameterType="String">
+        DELETE
+          FROM SCHEDULE_DETAIL
+         WHERE ID=#{id} 
+    </delete>  
+                
+	<select id="selectScheOne" parameterType="com.ware.group.schedule.ScheVO" resultType="com.ware.group.schedule.ScheVO">
+	    SELECT ID, TITLE, TYPE, START_DATE, START_HOUR, START_MINUTE, END_DATE, END_HOUR 
+	    	 , END_MINUTE, REPEAT_TYPE, REPEAT_OPTION, REPEAT_END, CONTENT, ISOPEN, M.employee_id USERNUM, M.name USERNAME
+	      FROM SCHEDULE TC
+	     INNER JOIN MEMBER M ON TC.USERNUM = M.id
+	     WHERE TC.DELETEFLAG=0 AND ID=#{id}
+	</select>
+	
+	<select id="selectScheOne4Read" parameterType="com.ware.group.schedule.ScheVO" resultType="com.ware.group.schedule.ScheVO">
+	    SELECT TC.ID, TC.TITLE, TC.TYPE, TC.START_DATE, TC.START_HOUR, TC.START_MINUTE, TC.END_DATE, TC.END_HOUR 
+	         , TC.END_MINUTE, TC.REPEAT_TYPE, TC.REPEAT_TYPE AS REPEATTYPENM, TC.REPEAT_END, TC.CONTENT, TC.ISOPEN, M.employee_id USERNUM, M.name USERNAME
+	      FROM SCHEDULE TC
+	     INNER JOIN MEMBER M ON TC.USERNUM = M.id
+	     WHERE TC.DELETEFLAG=0 AND TC.ID=#{id}
+	</select>
+
+</mapper>

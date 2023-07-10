@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ware.group.approval.ApprovalDAO">
+	
+	
+	<update id="updateApproverDepth" parameterType="ApproverVO">
+		update APPROVER set `depth` = `depth` - 1 where `depth` > #{depth}
+	</update>
+	
+	
+	<insert id="addCategory" parameterType="ApprovalCategoryVO" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO APPROVALCATEGORY (id, name, ref) VALUES (#{id}, #{name}, #{ref})
+	</insert>
+	
+	<insert id="addApprover" parameterType="ApprovalCategoryVO">
+		INSERT INTO APPROVER (category_id, job_id, department_id, depth) VALUES (#{categoryId}, #{jobId}, #{departmentId}, #{depth})
+	</insert>
+	
+	<insert id="addApprover1" parameterType="ApprovalCategoryVO">
+		INSERT INTO APPROVER (category_id, job_id, department_id, depth) VALUES (#{categoryId}, #{jobId}, #{departmentId}, #{depth})
+	</insert>
+	
+	<insert id="addApprovalFormFile" parameterType="ApprovalCategoryVO">
+		INSERT INTO APPROVALFORMFILE (category_id, file_name) VALUES (#{categoryId}, #{fileName})
+	</insert>
+	
+	<select id="getDepartmentList" resultType="DepartmentVO">
+		SELECT * FROM DEPARTMENT
+	</select>
+	
+	<select id="getJobList" parameterType="DepartmentVO" resultType="JobVO">
+		SELECT j.id, j.name FROM `MEMBER` m 
+		LEFT JOIN DEPARTMENT d 
+		ON m.department_id = d.id
+		LEFT JOIN JOB j 
+		ON m.job_id = j.id
+		WHERE d.id = #{id};
+	</select>
+	
+	<select id="getFileId" parameterType="String" resultType="Long">
+		SELECT id FROM DOCUMENTFILES WHERE file_name = #{fileName}
+	</select>
+	
+	<select id="getCategoryDuplication" parameterType="String" resultType="String">
+		SELECT name FROM APPROVALCATEGORY WHERE name = #{name}
+	</select>
+	
+	<insert id="addFormFile" parameterType="DocumentFilesVO">
+		INSERT INTO DOCUMENTFILES (document_id, file_name, ori_name) VALUE (0, #{fileName}, #{oriName}) 
+	</insert>
+	
+	<select id="getFileDuplication" parameterType="String" resultType="String">
+		SELECT file_name FROM APPROVALFORMFILE WHERE file_name = #{formFileName}
+	</select>
+	
+	<select id="getListCategoryRef0" resultType="ApprovalCategoryVO">
+		SELECT * FROM APPROVALCATEGORY WHERE REF = 0
+	</select>
+	
+	<select id="getListCategoryRef1" resultType="ApprovalCategoryVO">
+		SELECT * FROM APPROVALCATEGORY WHERE NOT REF = 0
+	</select>
+	
+	<select id="getListFormFile" resultType="ApprovalFormFileVO">
+		SELECT * FROM APPROVALFORMFILE
+	</select>
+	
+	<select id="getListApprover" resultMap="ApproverList">
+		SELECT a.*, d.id as 'd.id', d.name as 'd.name', j.id as 'j.id', j.name as 'j.name'  FROM APPROVER a 
+		LEFT JOIN DEPARTMENT d 
+		ON a.department_id = d.id
+		LEFT JOIN JOB j
+		ON a.job_id  = j.id;
+	</select>
+	<resultMap type="ApproverVO" id="ApproverList">
+		<result property="categoryId" column="category_id" />
+		<result property="jobId" column="job_id" />
+		<result property="departmentId" column="department_id" />
+		<result property="depth" column="depth" />
+		
+		<collection property="jobVOs" javaType="List" ofType="JobVO">
+			<id column="j.id" property="id"></id>   <!-- PK로 사용하는 column -->
+			<result column="j.name" property="name"></result>   <!-- PK를 제외한 나머지 -->
+	 	</collection>
+	 	<collection property="departmentVOs" javaType="List" ofType="DepartmentVO">
+			<id column="d.id" property="id"></id>   <!-- PK로 사용하는 column -->
+			<result column="d.name" property="name"></result>   <!-- PK를 제외한 나머지 -->
+	 	</collection>
+	</resultMap>
+	
+	<update id="updateFormFile" parameterType="ApprovalFormFileVO">
+		UPDATE APPROVALFORMFILE SET file_name = #{fileName} WHERE category_id = #{categoryId}
+	</update>
+	
+	<update id="updateCategoryName" parameterType="ApprovalCategoryVO">
+		UPDATE APPROVALCATEGORY SET name = #{name} where id = #{id}
+	</update>
+	
+	<update id="updateApprover" parameterType="ApproverVO">
+		UPDATE APPROVER SET department_id = #{departmentId}, job_id = #{jobId} WHERE category_id = #{categoryId} AND depth = #{depth}
+	</update>
+	
+	<select id="getListCategory" resultType="ApprovalCategoryVO">
+     	SELECT * FROM APPROVALCATEGORY
+   	</select>
+	
+	<delete id="deleteApprover" parameterType="ApproverVO">
+		DELETE FROM APPROVER WHERE category_id = #{categoryId} and job_id = #{jobId} and department_id = #{departmentId} and depth = #{depth}
+	</delete>
+	
+	<select id="checkUpperCategory" resultType="ApprovalCategoryVO">
+		SELECT * FROM APPROVALCATEGORY WHERE ref = 0
+	</select>
+	
+	<select id="underCategoryCount" parameterType="ApprovalCategoryVO" resultType="Long">
+		SELECT COUNT(id) FROM APPROVALCATEGORY WHERE ref = #{id}
+	</select>
+	<select id="getUnderCategory" parameterType="ApprovalCategoryVO" resultType="ApprovalCategoryVO">
+		SELECT * FROM APPROVALCATEGORY WHERE ref = #{id}
+	</select>
+	
+	<delete id="deleteUpperOptionApprover" parameterType="ApprovalCategoryVO">
+		DELETE FROM APPROVER WHERE category_id = #{id}
+	</delete>
+	<delete id="deleteUpperOptionFormFile" parameterType="ApprovalCategoryVO">
+		DELETE FROM APPROVALFORMFILE WHERE category_id = #{id}
+	</delete>
+	<delete id="deleteUnderFormFile" parameterType="ApprovalFormFileVO">
+		DELETE FROM APPROVALFORMFILE WHERE category_id = #{categoryId}
+	</delete>
+	<delete id="deleteUnderApprover" parameterType="ApproverVO">
+		DELETE FROM APPROVER WHERE category_id = #{categoryId}
+	</delete>
+	<delete id="deleteUnderCategory" parameterType="ApprovalCategoryVO">
+		DELETE FROM APPROVALCATEGORY WHERE id = #{id}
+	</delete>
+	<delete id="deleteCategory" parameterType="ApprovalCategoryVO">
+		DELETE FROM APPROVALCATEGORY WHERE id = #{id} OR ref = #{id}
+	</delete>
+	<insert id="addUnderCategory" parameterType="ApprovalCategoryVO" useGeneratedKeys="true" keyProperty="id">
+		INSERT INTO APPROVALCATEGORY (id, name, ref) VALUES (#{id}, #{name}, #{ref})
+	</insert>
+	<insert id="addUpperFormFile" parameterType="ApprovalFormFileVO">
+		INSERT INTO APPROVALFORMFILE (category_id, file_name) VALUES (#{categoryId}, #{fileName})
+	</insert>
+	
+	
+	<!--  -->
+	<insert id="setApprovalApplication" parameterType="ApprovalVO" useGeneratedKeys="true" keyProperty="id">
+ 		INSERT INTO APPROVAL VALUES(#{id},#{categoryId},#{memberId},#{contents},now(),'대기',null)
+ 	</insert>
+ 	<insert id="setApprovalApplicationFileUpload" parameterType="ApprovalUploadFileVO">
+ 		INSERT INTO APPROVALUPLOADFILE(approval_id,name) VALUES(#{approvalId},#{name})
+ 	</insert>
+ 	<insert id="setApprovalApplicationHistory" parameterType="ApprovalHistoryVO">
+ 		INSERT INTO APPROVALHISTORY(approval_id,member_id,date,`check`) VALUES(#{approvalId},#{memberId},now(),#{check})
+ 	</insert>
+ 	<select id="getApprovalInfo" parameterType="ApproverVO" resultType="MemberVO">
+ 		SELECT * FROM MEMBER WHERE job_id=#{jobId} AND department_id = #{departmentId} 
+ 		ORDER BY hire_date ASC
+ 		LIMIT 0,1;
+ 	</select>
+ 	<select id="getApprover" parameterType="ApprovalVO" resultType="ApproverVO">
+ 		SELECT * FROM APPROVER WHERE category_id=#{categoryId}
+ 	</select>
+ 	<insert id="setApprovalInfo" parameterType="ApprovalInfoVO">
+ 		INSERT INTO APPROVALINFO(approval_id,member_id,date,`check`,depth) VALUES(#{approvalId},#{memberId},now(),#{check},#{depth})
+ 	</insert>
+ 	<!-- <select id="getApprovalList" resultMap="app" parameterType="Pager">
+ 		SELECT * FROM APPROVAL a  LEFT JOIN APPROVALINFO a3 ON(a.id = a3.approval_id) LEFT JOIN APPROVALCATEGORY ac ON(a.category_id = ac.id) WHERE `check`='승인중' AND a3.member_id=#{memberId}
+ 		<include refid="search"></include>
+ 		<if test="categoryId !=null">
+ 			AND category_id=#{categoryId}
+ 		</if>
+ 		<if test="ref !=null">
+ 			AND `ref`=#{ref}
+ 		</if>
+		ORDER BY a.ID DESC
+		LIMIT #{startRow}, #{perPage}
+ 	</select> -->
+ 	<select id="getApprovalList" resultMap="app" parameterType="Pager">
+ 		SELECT * , m.name as m FROM APPROVAL a  LEFT JOIN APPROVALINFO a3 ON(a.id = a3.approval_id) LEFT JOIN APPROVALCATEGORY ac ON(a.category_id = ac.id) LEFT JOIN `MEMBER` m ON(a.member_id = m.id) WHERE `check`='승인중' 
+ 		
+ 		<if test="memberId !=null">
+ 			AND a3.member_id=#{memberId}
+ 		</if>
+ 		<if test="categoryId !=null">
+ 			AND (category_id=#{categoryId} OR `ref`=#{categoryId})
+ 			 
+ 		</if>
+		ORDER BY a.ID DESC
+		LIMIT #{startRow}, #{perPage}
+ 	</select>
+ 	<resultMap type="ApprovalVO" id="app">
+ 		<id column="id" property="id"/>
+ 		<result column="category_id" property="categoryId"/>
+ 		<result column="member_id" property="memberId"/>
+ 		<result column="contents" property="contents"/>
+ 		<result column="date" property="date"/>
+ 		<result column="confirm" property="confirm"/>
+ 		<result column="fin" property="fin"/>
+ 		
+ 		<association property="approvalInfoVO" javaType="ApprovalInfoVO">
+ 			<id column="id" property="id"/>
+ 			<result column="approval_id" property="approvalId"/>
+ 			<result column="member_id" property="memberId"/>
+ 			<result column="date" property="date"/>
+ 			<result column="check" property="check"/>
+ 		</association>
+ 		<association property="memberVO" javaType="MemberVO">
+ 		<id column="id" property="id"/>
+ 		<result column="m" property="name"/>
+ 		<result column="department_id" property="departmentId"/>
+ 		
+ 		
+ 		</association>
+ 	</resultMap>
+ 	<select id="getApprovalFile" parameterType="ApprovalVO" resultType="ApprovalUploadFileVO">
+ 		SELECT * FROM APPROVALUPLOADFILE WHERE approval_id=#{id}
+ 	</select>
+ 	<update id="setInfoUpdate" parameterType="ApprovalInfoVO">
+ 		UPDATE APPROVALINFO SET `check`=#{check}, date=now() WHERE member_id=#{memberId} AND approval_id=#{approvalId}
+ 	</update>
+ 	<select id="getInfoDetail" parameterType="ApprovalInfoVO" resultType="ApprovalInfoVO">
+ 		SELECT * FROM APPROVALINFO WHERE approval_id=#{approvalId} AND member_id=#{memberId}
+ 		
+ 		LIMIT 0,1;
+ 	</select>
+ 	 <select id="getInfoList" parameterType="ApprovalInfoVO"  resultType="ApprovalInfoVO">
+ 		SELECT * FROM APPROVALINFO WHERE approval_id=#{approvalId} AND depth=#{depth}
+ 	</select>
+ 	<update id="setApprovalUpdate" parameterType="ApprovalVO">
+ 		UPDATE APPROVAL SET confirm=#{confirm}, fin=now() WHERE id=#{id}
+ 	</update>
+ 	<insert id="setLeaverCode" parameterType="LeaveRecordVO">
+ 		INSERT INTO LEAVERECODE(member_id,approval_id,reason,`type`,count,use_date,annual_type) VALUES(#{memberId},#{approvalId},#{reason},#{type},#{count},#{useDate},#{annualType})
+ 	</insert>
+ 	<select id="memberDepart" parameterType="ApprovalVO" resultType="MemberVO">
+ 		SELECT department_id FROM MEMBER WHERE id=#{memberId}
+ 	</select>
+ 	<select id="departManager" parameterType="MemberVO" resultType="DepartmentVO">
+ 		SELECT manager FROM DEPARTMENT WHERE  id=#{departmentId}
+ 	</select>
+ 	<select id="getLeaverCode" parameterType="LeaveRecordVO" resultType="LeaveRecordVO">
+ 		SELECT * FROM LEAVERECODE WHERE approval_id=#{approvalId}
+ 	</select>
+ 	<select id="getApprovalId" parameterType="ApprovalVO" resultType="ApprovalVO">
+ 		SELECT * FROM APPROVAL WHERE id=#{id}
+ 	</select>
+ 	<update id="setAnnual" parameterType="LeaveRecordVO">
+ 		UPDATE ANNUAL SET count=count-#{count} WHERE member_id=#{memberId}
+ 	</update>
+ 	<select id="getMyApproval" parameterType="Pager" resultType="ApprovalVO">
+ 		SELECT * FROM APPROVAL WHERE member_id=#{memberId}
+ 		<if test="confirm !=null">
+ 			AND confirm=#{confirm}
+ 		</if>
+ 		<!-- <include refid="search"></include> -->
+ 		ORDER BY ID DESC
+		LIMIT #{startRow}, #{perPage}
+ 	</select>
+ 	<select id="getFormFile" resultType="ApprovalFormFileVO" parameterType="ApprovalCategoryVO">
+		SELECT * FROM APPROVALFORMFILE WHERE category_id=#{id}
+	</select>
+ 	
+ 	<delete id="setApprovalDelete" parameterType="Long">
+ 		DELETE FROM APPROVAL WHERE id=#{id1}
+ 	</delete>
+ 	
+ 	<delete id="setApprovalFileDelete" parameterType="Long">
+ 		DELETE FROM APPROVALUPLOADFILE WHERE approval_id=#{id1}
+ 	</delete>
+ 	<delete id="setApprovalInfoDelete" parameterType="Long">
+ 		DELETE FROM APPROVALINFO WHERE approval_id=#{id1}
+ 	</delete>
+ 	<select id="getLeave" parameterType="LeaveRecordVO" resultType="LeaveRecordVO">
+ 		SELECT * FROM LEAVERECODE WHERE type='대기' AND approval_id=#{approvalId}
+ 	</select>
+ 	
+ 	<!-- <select id="getTotalCount" parameterType="Pager" resultType="Long">
+			SELECT COUNT(a.id) FROM APPROVAL a  LEFT JOIN APPROVALINFO a3 ON(a.id = a3.approval_id) LEFT JOIN APPROVALCATEGORY ac ON(a.category_id = ac.id) WHERE `check`='승인중' AND a3.member_id=#{memberId}
+			<if test="categoryId !=null">
+ 			AND a.category_id=#{categoryId}
+ 		</if>
+ 		<if test="ref !=null">
+ 			AND `ref`=#{ref}
+ 		</if>
+ 		
+			<include refid="search"></include>
+	</select> -->
+	<select id="getTotalCount" parameterType="Pager" resultType="Long">
+			SELECT COUNT(a.id) FROM APPROVAL a  LEFT JOIN APPROVALINFO a3 ON(a.id = a3.approval_id) LEFT JOIN APPROVALCATEGORY ac ON(a.category_id = ac.id) WHERE `check`='승인중' 
+			<if test="memberId !=null">
+ 				AND a3.member_id=#{memberId}
+ 			</if>
+			<if test="categoryId !=null">
+ 				AND a.category_id=#{categoryId}
+ 				OR `ref`=#{categoryId}
+ 		</if>
+ 		
+			<!-- <include refid="search"></include> -->
+	</select>
+	<select id="getMyTotalCount" parameterType="Pager" resultType="Long">
+			SELECT COUNT(id) FROM APPROVAL  WHERE member_id=#{memberId}
+			<if test="confirm !=null">
+ 			AND confirm=#{confirm}
+ 		</if>
+			<!-- <include refid="search"></include> -->
+	</select>
+	<select id="getMyTotal" parameterType="Pager" resultType="Long">
+		SELECT COUNT(a.id) FROM APPROVAL a  WHERE member_id=#{memberId}
+		<!-- <include refid="search"></include> -->
+		<if test="confirm !=null">
+ 			AND `confirm`=#{confirm}
+ 		</if>
+ 		
+	</select>
+	
+	<sql id="search">
+		<where>
+			<if test="kind == 'contents'">
+				contents LIKE CONCAT('%',#{search},'%')
+			</if>
+					
+			
+		</where>
+	</sql>
+ 	
+ 	
+ 	
+</mapper>
