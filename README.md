@@ -12,11 +12,7 @@
 
 ## 프로젝트 개요
 
-<p align="center">
-  <br>
-    <img src="src/main/resources/static/images/login/logo.svg" width="500" height="200">
-  <br>
-</p>
+
 
 > **프로젝트:** 쇼핑몰 ( 전자기기 )
 >
